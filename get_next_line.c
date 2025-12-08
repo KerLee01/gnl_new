@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kerlee <marvin@42.fr>                      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/12/08 17:37:00 by kerlee            #+#    #+#             */
+/*   Updated: 2025/12/08 20:44:13 by kerlee           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "get_next_line.h"
 
 char *join_line(t_list *node, int length)
@@ -9,7 +21,7 @@ char *join_line(t_list *node, int length)
 	i = 0;
 	joined_str = malloc(sizeof(*joined_str) * (length + 1));
 	if(joined_str == NULL)
-		return (free_nodes(node), NULL);
+		return (NULL);
 	while(node != NULL)
 	{
 		current_str = node->content;
@@ -42,7 +54,7 @@ t_list *read_more(int fd, t_list *node, int *length)
 	{
 		buffer = malloc(sizeof(*buffer) * BUFFER_SIZE + 1);
 		if(buffer == NULL)
-			return NULL;
+			return (free_nodes(start), NULL);
 		byte = read(fd, buffer, BUFFER_SIZE);
 		if(byte == -1)
 			return (free(buffer), free_nodes(start), NULL);
@@ -50,6 +62,8 @@ t_list *read_more(int fd, t_list *node, int *length)
 			return (free(buffer), start);
 		buffer[byte] = '\0';
 		node = attach_node(byte, buffer, node, length);
+		if(node == NULL)
+			return(free_nodes(start), NULL);
 	}
 	return start;
 }
@@ -66,7 +80,11 @@ char *updated_content(char *old_content)
 		j++;
 	if(old_content[j] == '\n')
 		j++;
+	if(old_content[j] == '\0')
+		return NULL;
 	updated = malloc(sizeof(*updated_content) * (ft_strlen(old_content) - j + 1));
+	if(updated == NULL)
+		return NULL;
 	while(old_content[j] != '\0')
 	{
 		updated[i] = old_content[j];
@@ -77,12 +95,16 @@ char *updated_content(char *old_content)
 	return updated;
 }
 
-t_list *update_library(t_list *list)
+t_list *update_library(t_list *list, char *line)
 {
 	t_list *buffer;
+	t_list *start;
 	char *str;
 	char *updated;
 
+	start = list;
+	if(line == NULL)
+		return (free_nodes(list), NULL);
 	while(list->next != NULL)
 	{
 		buffer = list;
@@ -91,9 +113,12 @@ t_list *update_library(t_list *list)
 		free(buffer);
 	}
 	str = list->content;
+	start = list;
 	if(ft_strchr(str, '\n') != NULL)
 	{
 		updated = updated_content(str);
+		if(updated == NULL)
+			return (free_nodes(start), NULL);
 		free(list->content);
 		list->content = updated;
 		return list;
@@ -107,20 +132,32 @@ char *get_next_line(int fd)
 {
 	static t_list *library_fd[4096];
 	char *line;
+	char *empty_str;
+	char * found_nl;
 	int str_length;
 
 	str_length = 0;
 	if(fd < 0 || BUFFER_SIZE <= 0)
 		return NULL;
 	if(library_fd[fd] == NULL)
-		library_fd[fd] = create_new_node(strdup(""));
+	{
+		empty_str = malloc(1);
+		if(!empty_str)
+			return NULL;
+		empty_str[0] = '\0';
+		library_fd[fd] = create_new_node(empty_str);
+	}
 	if(library_fd[fd] == NULL)
-		return NULL;
-	str_length += ft_strlen(library_fd[fd]->content);
+		return (NULL);
+	found_nl = ft_strchr(library_fd[fd]->content, '\n');
+	if(found_nl != NULL)
+		str_length += ft_strlen(library_fd[fd]->content) - ft_strlen(found_nl) + 1; 
+	else
+		str_length += ft_strlen(library_fd[fd]->content);
 	library_fd[fd] = read_more(fd, library_fd[fd], &str_length);
 	if(library_fd[fd] == NULL)
 		return NULL;
 	line = join_line(library_fd[fd], str_length);
-	library_fd[fd] = update_library(library_fd[fd]);
+	library_fd[fd] = update_library(library_fd[fd], line);
 	return line;
 }

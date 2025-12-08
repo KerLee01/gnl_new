@@ -37,7 +37,7 @@ t_list *attach_node(int byte, char *buffer, t_list *node, int *length)
 
 	new = create_new_node(buffer);
 	if(new == NULL)
-		return NULL;
+		return (NULL);
 	node->next = new;
 	if(ft_strchr(buffer, '\n') == NULL)
 		*length = *length + byte;
@@ -58,7 +58,7 @@ t_list *create_new_node(char *content)
 {
 	t_list *new = malloc(sizeof(*new));
 	if(new == NULL)
-		return NULL;
+		return (free(content), NULL);
 
 	new->content = content;
 	new->next = NULL;
