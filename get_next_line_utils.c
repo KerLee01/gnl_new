@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line_utils.c                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kerlee <marvin@42.fr>                      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/12/09 17:20:51 by kerlee            #+#    #+#             */
+/*   Updated: 2025/12/09 19:10:31 by kerlee           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "get_next_line.h"
 
 char	*ft_strchr(const char *s, int c)
@@ -31,54 +43,53 @@ size_t	ft_strlen(const char *s)
 	return (count);
 }
 
-t_list *attach_node(int byte, char *buffer, t_list *node, int *length)
+t_list	*attach_node(int byte, char *buffer, t_list *node, int *length)
 {
-	t_list *new;
+	t_list	*new;
 
 	new = create_new_node(buffer);
-	if(new == NULL)
+	if (new == NULL)
 		return (NULL);
 	node->next = new;
-	if(ft_strchr(buffer, '\n') == NULL)
+	if (ft_strchr(buffer, '\n') == NULL)
 		*length = *length + byte;
-	else if(ft_strchr(buffer, '\n') != NULL)
+	else if (ft_strchr(buffer, '\n') != NULL)
 	{
-		while(*buffer && *buffer != '\n')
+		while (*buffer && *buffer != '\n')
 		{
 			(*length)++;
 			buffer++;
 		}
-		if(*buffer == '\n')
+		if (*buffer == '\n')
 			(*length)++;
 	}
-	return new;
+	return (new);
 }
 
-t_list *create_new_node(char *content)
+t_list	*create_new_node(char *content)
 {
-	t_list *new = malloc(sizeof(*new));
-	if(new == NULL)
-		return (free(content), NULL);
+	t_list	*new;
 
-	if(content == NULL)
+	new = malloc(sizeof(*new));
+	if (new == NULL)
+		return (free(content), NULL);
+	if (content == NULL)
 	{
 		content = malloc(1);
-		if(content == NULL)
-			return(free(new), NULL);
+		if (content == NULL)
+			return (free(new), NULL);
 		content[0] = '\0';
 	}
-
 	new->content = content;
 	new->next = NULL;
-
-	return new;
+	return (new);
 }
 
-void free_nodes(t_list *current)
+void	free_nodes(t_list *current)
 {
-	t_list *buffer;
+	t_list	*buffer;
 
-	while(current->next != NULL)
+	while (current->next != NULL)
 	{
 		free(current->content);
 		buffer = current;
@@ -87,4 +98,5 @@ void free_nodes(t_list *current)
 	}
 	free(current->content);
 	free(current);
+	current = NULL;
 }
