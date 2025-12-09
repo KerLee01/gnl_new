@@ -6,7 +6,7 @@
 /*   By: kerlee <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/08 17:37:00 by kerlee            #+#    #+#             */
-/*   Updated: 2025/12/08 20:44:13 by kerlee           ###   ########.fr       */
+/*   Updated: 2025/12/09 09:04:13 by kerlee           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,15 +41,17 @@ char *join_line(t_list *node, int length)
 	return joined_str;
 }
 
-t_list *read_more(int fd, t_list *node, int *length)
+t_list *read_more(int fd, t_list *node, int *length, char *nl_found)
 {
 	int byte;
 	char *buffer;
 	t_list* start;
 
-	if(node == NULL)
-		return NULL;
+	if(node == NULL) return NULL;
 	start = node;
+	(*length) += ft_strlen(node->content);
+	if(nl_found != NULL)
+		(*length) += ft_strlen(node->content) - ft_strlen(nl_found) + 1;
 	while(ft_strchr(node->content, '\n') == NULL)
 	{
 		buffer = malloc(sizeof(*buffer) * BUFFER_SIZE + 1);
@@ -119,42 +121,24 @@ t_list *update_library(t_list *list, char *line)
 		updated = updated_content(str);
 		if(updated == NULL)
 			return (free_nodes(start), NULL);
-		free(list->content);
-		list->content = updated;
-		return list;
+		return (free(list->content), list->content = updated, list);
 	}
-	free(list->content);
-	free(list);
-	return NULL;
+	return (free(list->content), free(list), NULL);
 }
 
 char *get_next_line(int fd)
 {
 	static t_list *library_fd[4096];
 	char *line;
-	char *empty_str;
-	char * found_nl;
 	int str_length;
 
 	str_length = 0;
-	if(fd < 0 || BUFFER_SIZE <= 0)
-		return NULL;
+	if(fd < 0 || BUFFER_SIZE <= 0) return NULL;
 	if(library_fd[fd] == NULL)
-	{
-		empty_str = malloc(1);
-		if(!empty_str)
-			return NULL;
-		empty_str[0] = '\0';
-		library_fd[fd] = create_new_node(empty_str);
-	}
+		library_fd[fd] = create_new_node(NULL);
 	if(library_fd[fd] == NULL)
 		return (NULL);
-	found_nl = ft_strchr(library_fd[fd]->content, '\n');
-	if(found_nl != NULL)
-		str_length += ft_strlen(library_fd[fd]->content) - ft_strlen(found_nl) + 1; 
-	else
-		str_length += ft_strlen(library_fd[fd]->content);
-	library_fd[fd] = read_more(fd, library_fd[fd], &str_length);
+	library_fd[fd] = read_more(fd, library_fd[fd], &str_length, ft_strchr(library_fd[fd]->content, '\n'));
 	if(library_fd[fd] == NULL)
 		return NULL;
 	line = join_line(library_fd[fd], str_length);

@@ -60,6 +60,14 @@ t_list *create_new_node(char *content)
 	if(new == NULL)
 		return (free(content), NULL);
 
+	if(content == NULL)
+	{
+		content = malloc(1);
+		if(content == NULL)
+			return(free(new), NULL);
+		content[0] = '\0';
+	}
+
 	new->content = content;
 	new->next = NULL;
 
